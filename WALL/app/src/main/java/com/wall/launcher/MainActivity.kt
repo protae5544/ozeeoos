@@ -1039,7 +1039,7 @@ fun IndigoTelemetryStencilStrip(
                     color = WallPalette.Indigo,
                     topLeft = Offset(size.width * 0.32f, 0f),
                     size = Size(size.width * 0.36f, size.height * 0.14f)
-         … )
+                )
                 // Can dome & cylinder outline
                 drawRect(
                     color = WallPalette.Indigo,
