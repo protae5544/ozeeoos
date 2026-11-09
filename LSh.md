@@ -525,8 +525,8 @@
 	
 	    /**
 	     * Converts an app's native Drawable into a spray-painted stencil on concrete.
-	     * - Preserves real app colors (LINE green, Gmail red, Termux black/white)
-	     * - Desaturates 13%, boosts contrast 14%
+	     * - Distressed B&W stamp: full desaturation + hard contrast duotone
+	     *   (chalk white vs charcoal spray, ref: grok B&W icon-pack screenshot)
 	     * - Applies luminance-aware concrete absorption so both bright and dark icons read clearly
 	     * - Adds directional cast shadow (top-left light source), faint pigment halo, spatter edges,
 	     *   and ±1.5° organic tilt.
@@ -2672,7 +2672,7 @@
 	/**
 	 * Single spray-painted stencil app icon on the concrete wall.
 	 * Includes:
-	 * - Pre-rendered sprayed icon with real app colors + directional wall shadow + ±1.5° tilt
+	 * - Pre-rendered distressed B&W stamp icon + directional wall shadow + ±1.5° tilt
 	 * - Red Paint Drip (#D8342A) notification stain dripping down beneath the icon
 	 * - Ghost stencil remnant when peeled off the wall
 	 * - Scrub-over spray animation when uninstalled

@@ -379,12 +379,14 @@ object WallEngine {
     }
 
     /**
-     * Converts an app's native Drawable into a spray-painted stencil on concrete.
-     * - Preserves real app colors (LINE green, Gmail red, Termux black/white)
-     * - Desaturates 13%, boosts contrast 14%
-     * - Applies luminance-aware concrete absorption so both bright and dark icons read clearly
-     * - Adds directional cast shadow (top-left light source), faint pigment halo, spatter edges,
-     *   and ±1.5° organic tilt.
+     * Converts an app's native Drawable into a distressed black-and-white
+     * stamp stencil on concrete (ref: grok B&W icon-pack screenshot).
+     * - Full desaturation + hard contrast snap: every icon becomes duotone
+     *   (chalk white vs charcoal spray) like a grainy photocopied stamp
+     * - Luminance-aware split so both bright and dark icons stay legible
+     * - Heavier porous erosion so raw wall shows through the pigment
+     * - Directional cast shadow (top-left light source), faint gray halo,
+     *   spatter edges, and ±1.5° organic tilt.
      */
     fun getOrRenderSprayedIcon(
         packageName: String,
@@ -402,11 +404,11 @@ object WallEngine {
         drawable.setBounds(0, 0, iconSize, iconSize)
         drawable.draw(rawCanvas)
 
-        // 2. Apply Desaturation (-13%) and Contrast (+14%)
+        // 2. Full desaturation + hard contrast: every icon becomes a B&W stamp base
         val gradedBmp = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888)
         val gradedCanvas = Canvas(gradedBmp)
-        val satMatrix = ColorMatrix().apply { setSaturation(0.87f) }
-        val contrast = 1.14f
+        val satMatrix = ColorMatrix().apply { setSaturation(0f) }
+        val contrast = 1.32f
         val shift = (-0.5f * contrast + 0.5f) * 255f
         val contrastMatrix = ColorMatrix(
             floatArrayOf(
@@ -516,29 +518,30 @@ object WallEngine {
 
                 if (edgeMask <= 0.02f) continue
 
-                var r = Color.red(c)
-                var g = Color.green(c)
-                var b = Color.blue(c)
-                val lum = (0.299f * r + 0.587f * g + 0.114f * b) / 255f
+                // Graded bitmap is fully desaturated: r == g == b == gray level
+                val lum = Color.red(c) / 255f
 
-                // Concrete Multiply Simulation:
-                // Bright whites become chalky plaster (#E8E2D5), midtones multiply with warm concrete,
-                // darks (like Termux) become charcoal spray with concrete grain bleeding through.
-                val concreteTone = 0.84f + (coarsePorosity - 0.5f) * 0.22f + (edgeNoise - 0.5f) * 0.12f
-                if (lum > 0.85f) {
-                    // Chalk White stencil pigment for crisp high-contrast symbols (like Termux >_)
-                    r = (r * 0.95f * concreteTone + 10f).toInt().coerceIn(0, 245)
-                    g = (g * 0.93f * concreteTone + 8f).toInt().coerceIn(0, 240)
-                    b = (b * 0.88f * concreteTone + 4f).toInt().coerceIn(0, 228)
+                // Distressed duotone stencil: chalk whites vs charcoal spray.
+                // Midtones snap hard to either side so every icon reads as a
+                // grainy black-and-white stamp; concrete grain bleeds through.
+                val concreteTone = 0.86f + (coarsePorosity - 0.5f) * 0.24f + (edgeNoise - 0.5f) * 0.14f
+                var r: Int
+                var g: Int
+                var b: Int
+                if (lum > 0.52f) {
+                    // Chalk White stencil pigment
+                    r = (235f * concreteTone).toInt().coerceIn(200, 245)
+                    g = (230f * concreteTone).toInt().coerceIn(195, 240)
+                    b = (220f * concreteTone).toInt().coerceIn(185, 228)
                 } else {
-                    // Multiply pigment into warm concrete base
-                    r = (r * concreteTone * 0.96f + 14f * (1f - coarsePorosity)).toInt().coerceIn(22, 240)
-                    g = (g * concreteTone * 0.94f + 12f * (1f - coarsePorosity)).toInt().coerceIn(20, 234)
-                    b = (b * concreteTone * 0.89f + 10f * (1f - coarsePorosity)).toInt().coerceIn(18, 222)
+                    // Charcoal spray pigment
+                    r = (48f * concreteTone + 10f * (1f - coarsePorosity)).toInt().coerceIn(22, 110)
+                    g = (44f * concreteTone + 9f * (1f - coarsePorosity)).toInt().coerceIn(20, 104)
+                    b = (40f * concreteTone + 8f * (1f - coarsePorosity)).toInt().coerceIn(18, 98)
                 }
 
                 // Porous concrete erosion: tiny flecks where raw wall shows through paint
-                val porosityAlpha = if (edgeNoise > 0.88f) 0.72f else 0.94f
+                val porosityAlpha = if (edgeNoise > 0.80f) 0.60f else 0.96f
                 val finalAlpha = (a * edgeMask * porosityAlpha).toInt().coerceIn(0, 255)
 
                 sprayedPixels[idx] = Color.argb(finalAlpha, r, g, b)

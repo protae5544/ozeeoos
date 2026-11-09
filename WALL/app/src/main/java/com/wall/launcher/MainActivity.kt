@@ -1454,7 +1454,7 @@ fun WallConcreteBayPage(
 /**
  * Single spray-painted stencil app icon on the concrete wall.
  * Includes:
- * - Pre-rendered sprayed icon with real app colors + directional wall shadow + ±1.5° tilt
+ * - Pre-rendered distressed B&W stamp icon + directional wall shadow + ±1.5° tilt
  * - Red Paint Drip (#D8342A) notification stain dripping down beneath the icon
  * - Ghost stencil remnant when peeled off the wall
  * - Scrub-over spray animation when uninstalled
