@@ -1,58 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  WALL launcher foreground: original stencil artwork (no copied art).
-  Charcoal spray can with mustard label band, red paint drip, chalk spatter.
-  Kept geometric so it stays crisp inside the 72dp adaptive-icon safe circle.
+  WALL launcher foreground: original stencil artwork inspired by the concrete
+  girl-with-balloon reference card (new drawing, not a copy of any artwork).
+  Charcoal child silhouette reaching up-right toward a spray-red heart balloon
+  on a loose wavy string. All art kept inside the 72dp adaptive safe circle.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- spray mist dots, upper area -->
-    <path
-        android:fillAlpha="0.65"
-        android:fillColor="#3E3A33"
-        android:pathData="M69,29 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 z" />
-    <path
-        android:fillAlpha="0.55"
-        android:fillColor="#3E3A33"
-        android:pathData="M72.5,25 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0 z" />
-    <path
-        android:fillAlpha="0.55"
-        android:fillColor="#3E3A33"
-        android:pathData="M65.8,21 a1.2,1.2 0 1,0 2.4,0 a1.2,1.2 0 1,0 -2.4,0 z" />
-    <!-- nozzle + cap -->
-    <path
-        android:fillColor="#23211E"
-        android:pathData="M52,26 h6 v6 h-6 z" />
-    <path
-        android:fillColor="#23211E"
-        android:pathData="M46,32 h16 v8 h-16 z" />
-    <!-- can body -->
-    <path
-        android:fillColor="#3E3A33"
-        android:pathData="M44,40 h20 a4,4 0 0 1 4,4 v30 a4,4 0 0 1 -4,4 h-20 a4,4 0 0 1 -4,-4 v-30 a4,4 0 0 1 4,-4 z" />
-    <!-- mustard label band -->
-    <path
-        android:fillColor="#D9A227"
-        android:pathData="M40,54 h28 v10 h-28 z" />
-    <!-- chalk spatter dots -->
-    <path
-        android:fillAlpha="0.85"
-        android:fillColor="#F2EFE9"
-        android:pathData="M32.8,34 a1.2,1.2 0 1,0 2.4,0 a1.2,1.2 0 1,0 -2.4,0 z" />
-    <path
-        android:fillAlpha="0.8"
-        android:fillColor="#F2EFE9"
-        android:pathData="M30.5,66 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0 z" />
-    <!-- spray-red paint drip from the can base (the only red allowed to shout) -->
-    <path
-        android:pathData="M59,78 L59,85"
-        android:strokeColor="#D8342A"
-        android:strokeLineCap="round"
-        android:strokeWidth="3.2" />
+    <!-- spray-red heart balloon, upper right -->
     <path
         android:fillColor="#D8342A"
-        android:pathData="M56.6,86.4 a2.4,2.4 0 1,0 4.8,0 a2.4,2.4 0 1,0 -4.8,0 z" />
+        android:pathData="M65,43 C61,37 57.5,34.5 57.5,30 C57.5,26.5 60,24.5 62.5,24.5 C63.8,24.5 64.6,25.3 65,26.5 C65.4,25.3 66.2,24.5 67.5,24.5 C70,24.5 72.5,26.5 72.5,30 C72.5,34.5 69,37 65,43 Z" />
+    <!-- wavy string from balloon tip toward the reaching hand -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M65,43 C63,45.5 61,46.5 60,48.5 C59.3,50 59.2,50.5 59,51"
+        android:strokeColor="#3E3A33"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.6" />
+    <!-- wind-blown hair flicks -->
+    <path
+        android:fillColor="#3E3A33"
+        android:pathData="M37,52 L29,49 L35,55 Z" />
+    <path
+        android:fillColor="#3E3A33"
+        android:pathData="M36,58 L27,58 L35,61 Z" />
+    <!-- head -->
+    <path
+        android:fillColor="#3E3A33"
+        android:pathData="M36,56 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 z" />
+    <!-- dress -->
+    <path
+        android:fillColor="#3E3A33"
+        android:pathData="M38,66 C37,70 35,76 33,82 L51,82 C49,76 47,70 46,66 Z" />
+    <!-- stencil bridge gap across the dress -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M34.8,73 L47.8,73"
+        android:strokeColor="#CFC8BA"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.8" />
+    <!-- reaching arm + hand -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M45,67 L59,51"
+        android:strokeColor="#3E3A33"
+        android:strokeLineCap="round"
+        android:strokeWidth="4.2" />
+    <path
+        android:fillColor="#3E3A33"
+        android:pathData="M56.7,51 a2.3,2.3 0 1,0 4.6,0 a2.3,2.3 0 1,0 -4.6,0 z" />
+    <!-- legs -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M40,82 L39,86"
+        android:strokeColor="#3E3A33"
+        android:strokeLineCap="round"
+        android:strokeWidth="4.2" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M45,82 L46,86"
+        android:strokeColor="#3E3A33"
+        android:strokeLineCap="round"
+        android:strokeWidth="4.2" />
 </vector>
