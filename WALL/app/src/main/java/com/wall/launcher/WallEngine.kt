@@ -80,8 +80,16 @@ object WallEngine {
     @Volatile
     private var cachedBalloonStencil: ImageBitmap? = null
 
-    // Process-wide cache for pre-rendered spray-painted app icons (Max ~5.5 MB in RAM)
-    private val iconCache = object : LruCache<String, SprayedIconAsset>(140) {}
+    /** Full-bleed stamp canvas: 408px so a 78dp slot on xxxhdpi gets a true
+     *  1:1 pixel source instead of an upscaled 148px blur. */
+    private const val ICON_CANVAS_PX = 408
+
+    // Process-wide cache for pre-rendered spray-painted app icons, sized in KB:
+    // each asset holds two ARGB_8888 bitmaps (~1.3MB at 408px), cap ~24MB.
+    private val iconCache = object : LruCache<String, SprayedIconAsset>(24 * 1024) {
+        override fun sizeOf(key: String, value: SprayedIconAsset): Int =
+            (ICON_CANVAS_PX * ICON_CANVAS_PX * 8) / 1024
+    }
 
     /**
      * Fast deterministic 2D hash for procedural concrete texture & spatter generation.
@@ -381,12 +389,13 @@ object WallEngine {
     /**
      * Converts an app's native Drawable into a distressed black-and-white
      * stamp stencil on concrete (ref: grok B&W icon-pack screenshot).
-     * - Full desaturation + hard contrast snap: every icon becomes duotone
-     *   (chalk white vs charcoal spray) like a grainy photocopied stamp
-     * - Luminance-aware split so both bright and dark icons stay legible
-     * - Heavier porous erosion so raw wall shows through the pigment
-     * - Directional cast shadow (top-left light source), faint gray halo,
-     *   spatter edges, and ±1.5° organic tilt.
+     * Done with restraint so icons stay recognizable:
+     * - Full-bleed 408px canvas: no upscale blur on dense screens
+     * - Gentle desaturation + soft 1.12 lift: midtone detail survives
+     * - Smooth chalk/charcoal duotone blend, never a hard snap
+     * - Feathered squircle edge + sparse pinhole grain, never bites
+     * - Directional cast shadow (top-left light source), faint halo,
+     *   spatter, and ±1.5° organic tilt kept subtle.
      */
     fun getOrRenderSprayedIcon(
         packageName: String,
@@ -394,8 +403,8 @@ object WallEngine {
     ): SprayedIconAsset {
         iconCache.get(packageName)?.let { return it }
 
-        val canvasSize = 148
-        val iconSize = 104
+        val canvasSize = ICON_CANVAS_PX
+        val iconSize = 288
         val offset = (canvasSize - iconSize) / 2
 
         // 1. Rasterize source app icon
@@ -404,11 +413,12 @@ object WallEngine {
         drawable.setBounds(0, 0, iconSize, iconSize)
         drawable.draw(rawCanvas)
 
-        // 2. Full desaturation + hard contrast: every icon becomes a B&W stamp base
+        // 2. Gentle grade: desaturate, then a soft lift that keeps midtone
+        // detail instead of crushing it. The old 1.32 snap is what ate icons.
         val gradedBmp = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888)
         val gradedCanvas = Canvas(gradedBmp)
         val satMatrix = ColorMatrix().apply { setSaturation(0f) }
-        val contrast = 1.32f
+        val contrast = 1.12f
         val shift = (-0.5f * contrast + 0.5f) * 255f
         val contrastMatrix = ColorMatrix(
             floatArrayOf(
@@ -509,11 +519,12 @@ object WallEngine {
                 val edgeNoise = hash2D(x, y, pkgHash)
                 val coarsePorosity = valueNoise(x * 0.22f, y * 0.22f, pkgHash + 31)
 
-                // Erode rounded-square sticker edges into organic spray-painted stencil borders
+                // Feather rounded-square sticker edges into an organic
+                // spray-painted border — a soft wobble, never a hard bite
                 var edgeMask = 1.0f
-                if (distSq > 0.84f) {
-                    val falloff = (1.0f - (distSq - 0.84f) / 0.18f).coerceIn(0f, 1f)
-                    edgeMask = if (edgeNoise < falloff * 1.15f) falloff else 0f
+                if (distSq > 0.88f) {
+                    val falloff = (1.0f - (distSq - 0.88f) / 0.16f).coerceIn(0f, 1f)
+                    edgeMask = (falloff * (0.75f + edgeNoise * 0.5f)).coerceIn(0f, 1f)
                 }
 
                 if (edgeMask <= 0.02f) continue
@@ -521,27 +532,21 @@ object WallEngine {
                 // Graded bitmap is fully desaturated: r == g == b == gray level
                 val lum = Color.red(c) / 255f
 
-                // Distressed duotone stencil: chalk whites vs charcoal spray.
-                // Midtones snap hard to either side so every icon reads as a
-                // grainy black-and-white stamp; concrete grain bleeds through.
-                val concreteTone = 0.86f + (coarsePorosity - 0.5f) * 0.24f + (edgeNoise - 0.5f) * 0.14f
-                var r: Int
-                var g: Int
-                var b: Int
-                if (lum > 0.52f) {
-                    // Chalk White stencil pigment
-                    r = (235f * concreteTone).toInt().coerceIn(200, 245)
-                    g = (230f * concreteTone).toInt().coerceIn(195, 240)
-                    b = (220f * concreteTone).toInt().coerceIn(185, 228)
-                } else {
-                    // Charcoal spray pigment
-                    r = (48f * concreteTone + 10f * (1f - coarsePorosity)).toInt().coerceIn(22, 110)
-                    g = (44f * concreteTone + 9f * (1f - coarsePorosity)).toInt().coerceIn(20, 104)
-                    b = (40f * concreteTone + 8f * (1f - coarsePorosity)).toInt().coerceIn(18, 98)
-                }
+                // Gentle duotone: smooth chalk/charcoal blend that KEEPS midtone
+                // detail instead of snapping it away. t=0 -> charcoal spray,
+                // t=1 -> chalk white, smoothstepped across the middle band so
+                // icon shapes stay recognizable.
+                val t = ((lum - 0.30f) / 0.40f).coerceIn(0f, 1f)
+                val smooth = t * t * (3f - 2f * t)
+                // Fine concrete grain modulates tone, never erases it
+                val grain = 0.94f + (coarsePorosity - 0.5f) * 0.10f + (edgeNoise - 0.5f) * 0.06f
+                val r = ((52f + (233f - 52f) * smooth) * grain).toInt().coerceIn(20, 244)
+                val g = ((48f + (229f - 48f) * smooth) * grain).toInt().coerceIn(18, 240)
+                val b = ((44f + (220f - 44f) * smooth) * grain).toInt().coerceIn(16, 232)
 
-                // Porous concrete erosion: tiny flecks where raw wall shows through paint
-                val porosityAlpha = if (edgeNoise > 0.80f) 0.60f else 0.96f
+                // Sparse pinholes where raw wall shows through — rare and tiny,
+                // scaled to the new resolution so they read as grain, not damage
+                val porosityAlpha = if (edgeNoise > 0.965f) 0.55f else 0.98f
                 val finalAlpha = (a * edgeMask * porosityAlpha).toInt().coerceIn(0, 255)
 
                 sprayedPixels[idx] = Color.argb(finalAlpha, r, g, b)
@@ -565,7 +570,7 @@ object WallEngine {
 
         // 4c. Draw directional cast shadow directly onto wall plane (+4px X, +5px Y)
         val bitmapPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
-        finalCanvas.drawBitmap(shadowIconBmp, offset + 4f, offset + 5f, bitmapPaint)
+        finalCanvas.drawBitmap(shadowIconBmp, offset + 11f, offset + 14f, bitmapPaint)
 
         // 4d. Draw sprayed icon pigment layer
         finalCanvas.drawBitmap(sprayedIconBmp, offset.toFloat(), offset.toFloat(), bitmapPaint)
@@ -577,10 +582,10 @@ object WallEngine {
         }
         for (i in 0 until 28) {
             val angle = hash2D(i, 1, pkgHash) * (Math.PI.toFloat() * 2f)
-            val dist = (iconSize * 0.44f) + hash2D(i, 2, pkgHash) * 14f
+            val dist = (iconSize * 0.44f) + hash2D(i, 2, pkgHash) * 39f
             val sx = (canvasSize / 2f) + cos(angle) * dist
             val sy = (canvasSize / 2f) + sin(angle) * dist
-            val radius = 0.8f + hash2D(i, 3, pkgHash) * 1.6f
+            val radius = 2.2f + hash2D(i, 3, pkgHash) * 4.4f
             spatterPaint.color = Color.argb(
                 (70 + hash2D(i, 4, pkgHash) * 90).toInt(),
                 domR, domG, domB
@@ -591,12 +596,12 @@ object WallEngine {
         // Subtle gravity paint bleed on ~35% of icons
         if ((abs(pkgHash) % 10) < 4) {
             val dripX = offset + iconSize * (0.3f + (abs(pkgHash shr 4) % 40) / 100f)
-            val dripStartY = (offset + iconSize - 6).toFloat()
-            val dripLen = 7f + (abs(pkgHash shr 8) % 9)
+            val dripStartY = (offset + iconSize - 17).toFloat()
+            val dripLen = 19f + (abs(pkgHash shr 8) % 25)
             spatterPaint.color = Color.argb(145, domR, domG, domB)
-            spatterPaint.strokeWidth = 2.2f
+            spatterPaint.strokeWidth = 6f
             finalCanvas.drawLine(dripX, dripStartY, dripX, dripStartY + dripLen, spatterPaint)
-            finalCanvas.drawCircle(dripX, dripStartY + dripLen, 1.8f, spatterPaint)
+            finalCanvas.drawCircle(dripX, dripStartY + dripLen, 5f, spatterPaint)
         }
 
         finalCanvas.restore()

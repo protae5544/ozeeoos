@@ -214,10 +214,10 @@ fun WallLauncherSurface(repository: WallRepository) {
                     .map { info ->
                         val pkg = info.applicationInfo.packageName
                         val label = info.label?.toString() ?: pkg
-                        // Stencil icon pack first: hand-drawn glyph replaces the native
-                        // icon for covered apps; everyone else keeps the B&W stamp.
-                        val drawable = StencilIconPack.stencilFor(context, pkg)
-                            ?: info.getIcon(0) ?: pm.defaultActivityIcon
+                        // Every app keeps its own native icon through the B&W
+                        // stamp pipeline — no pack override, no double
+                        // processing, no silently capped resolution.
+                        val drawable = info.getIcon(0) ?: pm.defaultActivityIcon
                         val sprayedAsset = WallEngine.getOrRenderSprayedIcon(pkg, drawable)
                         WallAppItem(
                             label = label,
