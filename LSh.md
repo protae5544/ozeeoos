@@ -527,6 +527,10 @@
 	     * Converts an app's native Drawable into a spray-painted stencil on concrete.
 	     * - Distressed B&W stamp: full desaturation + hard contrast duotone
 	     *   (chalk white vs charcoal spray, ref: grok B&W icon-pack screenshot)
+	     * - StencilIconPack: hand-drawn white vector glyph per known package
+	     *   (res/drawable/stencil_*.xml) replaces the native icon before the
+	     *   stamp pipeline; uncovered apps fall back to the B&W stamp of
+	     *   their own icon
 	     * - Applies luminance-aware concrete absorption so both bright and dark icons read clearly
 	     * - Adds directional cast shadow (top-left light source), faint pigment halo, spatter edges,
 	     *   and ±1.5° organic tilt.
