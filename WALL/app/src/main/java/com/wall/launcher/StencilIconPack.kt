@@ -17,8 +17,15 @@ import androidx.core.content.ContextCompat
 object StencilIconPack {
 
     private val PACK: Map<String, Int> = mapOf(
+        // User-supplied AI pack art (concrete stencil cards, magenta keyed out)
+        "com.miui.gallery" to R.drawable.pack_gallery,
+        "com.android.gallery3d" to R.drawable.pack_gallery,
+        "com.google.android.inputmethod.latin" to R.drawable.pack_gboard,
+        "com.github.android" to R.drawable.pack_github,
+        "com.google.android.gm" to R.drawable.pack_gmail,
+        "com.google.android.googlequicksearchbox" to R.drawable.pack_google,
+        // Hand-drawn fallback glyphs
         "com.termux" to R.drawable.stencil_termux,
-        "com.google.android.gm" to R.drawable.stencil_gmail,
         "com.google.android.youtube" to R.drawable.stencil_youtube,
         "com.android.chrome" to R.drawable.stencil_chrome,
         "com.google.android.apps.maps" to R.drawable.stencil_maps,
