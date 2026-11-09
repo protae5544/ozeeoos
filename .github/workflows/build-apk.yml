@@ -17,6 +17,9 @@ permissions:
 jobs:
   build-debug:
     runs-on: ubuntu-latest
+    env:
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      ANDROID_HOME: /usr/local/lib/android/sdk
     defaults:
       run:
         working-directory: WALL
@@ -30,13 +33,10 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install Android platform + build-tools
         run: |
+          yes | sdkmanager --licenses > /dev/null || true
           sdkmanager --install "platforms;android-35" "build-tools;35.0.0" "platform-tools"
-          sdkmanager --licenses < /dev/null || true
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
           cat local.properties
 
