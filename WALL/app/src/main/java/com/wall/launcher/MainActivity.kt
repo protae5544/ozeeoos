@@ -941,6 +941,16 @@ fun StencilClockSign(
         }
     ) {
         Box {
+            // BANKSY WALL: chalk balloon tethered to the clock. The mustard string
+            // runs to the bitmap's bottom edge so the knot lands on the numerals.
+            Image(
+                bitmap = remember { WallEngine.getOrGenerateChalkBalloonStencil() },
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .offset(x = 12.dp, y = (-72).dp)
+                    .size(width = 52.dp, height = 80.dp)
+            )
             // Directional concrete shadow under the stencil numerals
             Text(
                 text = timeText,
@@ -1948,6 +1958,25 @@ fun WallStreetCurbDock(
                     fontSize = 10.sp,
                     color = WallPalette.ConcreteDeepShadow
                 )
+            )
+        }
+
+        // BANKSY WALL: curb-crew rat chalking the curb line at the pavement's edge.
+        // Same turquoise stencil as the corner easter egg, facing the dock icons.
+        // Tucked in the left gutter so it never covers a pinned icon.
+        val curbRatBitmap = remember { WallEngine.getOrGenerateTurquoiseRatStencil() }
+        val curbRatContext = LocalContext.current
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 4.dp, bottom = 2.dp)
+                .clickable { TermuxCare.launchTermuxLatestSession(curbRatContext) }
+                .semantics { contentDescription = "Turquoise stencil rat chalking the curb. Tap to launch Termux." }
+        ) {
+            Image(
+                bitmap = curbRatBitmap,
+                contentDescription = null,
+                modifier = Modifier.size(38.dp)
             )
         }
 

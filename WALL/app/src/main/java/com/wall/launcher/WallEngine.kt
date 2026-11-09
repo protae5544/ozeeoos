@@ -77,6 +77,9 @@ object WallEngine {
     @Volatile
     private var cachedRatStencil: ImageBitmap? = null
 
+    @Volatile
+    private var cachedBalloonStencil: ImageBitmap? = null
+
     // Process-wide cache for pre-rendered spray-painted app icons (Max ~5.5 MB in RAM)
     private val iconCache = object : LruCache<String, SprayedIconAsset>(140) {}
 
@@ -276,6 +279,101 @@ object WallEngine {
 
             val result = bmp.asImageBitmap()
             cachedRatStencil = result
+            return result
+        }
+    }
+
+    /**
+     * Original chalk-white stencil balloon with a mustard string tied at its knot.
+     * The string runs down to the bitmap's bottom edge so the balloon can be pinned
+     * above the stencil clock as if tethered to it. 100% procedural, zero assets.
+     * Header-zone palette: Chalk White balloon + Mustard Yellow string.
+     */
+    fun getOrGenerateChalkBalloonStencil(): ImageBitmap {
+        cachedBalloonStencil?.let { return it }
+        synchronized(this) {
+            cachedBalloonStencil?.let { return it }
+            val w = 104
+            val h = 160
+            val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bmp)
+            val chalk = WallPalette.CHALK_WHITE_INT
+            val mustard = WallPalette.MUSTARD_YELLOW_INT
+
+            // Faint chalk overspray halo around the balloon
+            val haloPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                shader = RadialGradient(
+                    w * 0.5f, h * 0.28f, w * 0.48f,
+                    Color.argb(40, 242, 239, 233),
+                    Color.TRANSPARENT,
+                    Shader.TileMode.CLAMP
+                )
+            }
+            canvas.drawCircle(w * 0.5f, h * 0.28f, w * 0.48f, haloPaint)
+
+            // Balloon body + tie knot
+            val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = chalk
+                style = Paint.Style.FILL
+            }
+            canvas.drawOval(RectF(w * 0.16f, h * 0.03f, w * 0.84f, h * 0.55f), bodyPaint)
+            canvas.drawRect(w * 0.45f, h * 0.55f, w * 0.55f, h * 0.585f, bodyPaint)
+
+            // Mustard string: loose S-curve from the knot down to the tie point
+            val stringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = mustard
+                style = Paint.Style.STROKE
+                strokeWidth = 3f
+                strokeCap = Paint.Cap.ROUND
+            }
+            val stringPath = android.graphics.Path().apply {
+                moveTo(w * 0.5f, h * 0.585f)
+                quadTo(w * 0.36f, h * 0.72f, w * 0.55f, h * 0.84f)
+                quadTo(w * 0.62f, h * 0.90f, w * 0.56f, h * 0.985f)
+            }
+            canvas.drawPath(stringPath, stringPaint)
+            canvas.drawCircle(
+                w * 0.56f, h * 0.975f, 3f,
+                Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = mustard
+                    style = Paint.Style.FILL
+                }
+            )
+
+            // Stencil bridge cutout across the balloon
+            val bridgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_OUT)
+                color = Color.BLACK
+                style = Paint.Style.STROKE
+                strokeWidth = 3f
+            }
+            canvas.drawLine(w * 0.20f, h * 0.30f, w * 0.80f, h * 0.30f, bridgePaint)
+
+            // Eroded concrete grain & spatter around the balloon
+            for (y in 0 until h) {
+                for (x in 0 until w) {
+                    val px = bmp.getPixel(x, y)
+                    val a = Color.alpha(px)
+                    if (a > 0) {
+                        val grain = hash2D(x, y, 727)
+                        if (grain > 0.82f) {
+                            val erodedAlpha = (a * 0.55f).toInt()
+                            bmp.setPixel(
+                                x, y,
+                                Color.argb(erodedAlpha, Color.red(px), Color.green(px), Color.blue(px))
+                            )
+                        }
+                    } else {
+                        val spatter = hash2D(x, y, 717)
+                        if (spatter > 0.994f && x in 8..96 && y in 0..110) {
+                            bmp.setPixel(x, y, Color.argb(110, 242, 239, 233))
+                        }
+                    }
+                }
+            }
+
+            val result = bmp.asImageBitmap()
+            cachedBalloonStencil = result
             return result
         }
     }
