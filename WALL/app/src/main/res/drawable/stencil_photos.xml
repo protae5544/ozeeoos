@@ -7,7 +7,7 @@
     <group
         android:pivotX="48"
         android:pivotY="48"
-        android:rotationDegrees="0">
+        android:rotation="0">
         <path
             android:fillColor="#FFFFFF"
             android:pathData="M48,48 C40,36 40,26 48,18 C56,26 56,36 48,48 Z" />
@@ -15,7 +15,7 @@
     <group
         android:pivotX="48"
         android:pivotY="48"
-        android:rotationDegrees="90">
+        android:rotation="90">
         <path
             android:fillColor="#FFFFFF"
             android:pathData="M48,48 C40,36 40,26 48,18 C56,26 56,36 48,48 Z" />
@@ -23,7 +23,7 @@
     <group
         android:pivotX="48"
         android:pivotY="48"
-        android:rotationDegrees="180">
+        android:rotation="180">
         <path
             android:fillColor="#FFFFFF"
             android:pathData="M48,48 C40,36 40,26 48,18 C56,26 56,36 48,48 Z" />
@@ -31,7 +31,7 @@
     <group
         android:pivotX="48"
         android:pivotY="48"
-        android:rotationDegrees="270">
+        android:rotation="270">
         <path
             android:fillColor="#FFFFFF"
             android:pathData="M48,48 C40,36 40,26 48,18 C56,26 56,36 48,48 Z" />
